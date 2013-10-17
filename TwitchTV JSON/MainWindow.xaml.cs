@@ -105,7 +105,7 @@ namespace TwitchTV_JSON
         private void GamesList()
         {
             // this can probably be fetched from the api. 
-            CreateGameButtons("World of Warcraft");
+            CreateGameButtons("World of Warcraft: Mists of Pandaria");
             CreateGameButtons("Dota 2");
             CreateGameButtons("Hearthstone");
             CreateGameButtons("StarCraft II: Heart of the Swarm");
