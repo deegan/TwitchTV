@@ -104,6 +104,7 @@ namespace TwitchTV_JSON
 
         private void GamesList()
         {
+            // this can probably be fetched from the api. 
             CreateGameButtons("World of Warcraft");
             CreateGameButtons("Dota 2");
             CreateGameButtons("Hearthstone");
@@ -119,6 +120,7 @@ namespace TwitchTV_JSON
 
         private void game_select_Change(object sender, RoutedEventArgs e)
         {
+            // Get's the name of the game and calls Refresh();
             string game = Convert.ToString(e.Source.GetType().GetProperty("Content").GetValue(e.Source, null));
             Refresh(game);
         }
