@@ -107,7 +107,7 @@ namespace TwitchTV_JSON
             // this can probably be fetched from the api. 
             CreateGameButtons("World of Warcraft: Mists of Pandaria");
             CreateGameButtons("Dota 2");
-            CreateGameButtons("Hearthstone");
+            CreateGameButtons("Hearthstone: Heroes of Warcraft");
             CreateGameButtons("StarCraft II: Heart of the Swarm");
             CreateGameButtons("Heroes of Newerth");
             CreateGameButtons("League of Legends");
@@ -140,7 +140,7 @@ namespace TwitchTV_JSON
                 if ((bool)button.IsChecked)
                     quality = button.Content.ToString();
             }
-            Process.Start("CMD", "/C livestreamer.exe -url twitch.tv/" + text_owner.Text.Remove(0, 7) + " " + quality);
+            Process.Start("CMD", "/C livestreamer.exe twitch.tv/" + text_owner.Text.Remove(0, 7) + " " + quality);
         }
     }
 }

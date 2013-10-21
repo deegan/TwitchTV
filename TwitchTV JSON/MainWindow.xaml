@@ -31,6 +31,10 @@
                     <RadioButton Content="mobile_high" IsChecked="True" />
                     <RadioButton Content="mobile_medium" />
                     <RadioButton Content="mobile_low" />
+                    <RadioButton Content="high" />
+                    <RadioButton Content="medium" />
+                    <RadioButton Content="low" />
+                    <RadioButton Content="source" />
                 </StackPanel>
             </GroupBox>
         </StackPanel>
