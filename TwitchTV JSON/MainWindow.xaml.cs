@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml.Linq;
+using Newtonsoft.Json;
 
 namespace TwitchTV_JSON
 {
@@ -104,7 +105,11 @@ namespace TwitchTV_JSON
 
         private void GamesList()
         {
+            var url = "https://api.twitch.tv/kraken/games/top?limit=10";
+            var name = _download_serialized_json_data<Top>(url);
+
             // this can probably be fetched from the api. 
+            // https://api.twitch.tv/kraken/games/top?limit=10&offset=10
             CreateGameButtons("World of Warcraft: Mists of Pandaria");
             CreateGameButtons("Dota 2");
             CreateGameButtons("Hearthstone: Heroes of Warcraft");
@@ -130,6 +135,28 @@ namespace TwitchTV_JSON
             public string ChannelOwner { get; set; }
             public int ViewerCount { get; set; }
             public string image { get; set; }
+        }
+
+        private static T _download_serialized_json_data<T>(string url) where T : new()
+        {
+            using (var w = new WebClient())
+            {
+                var json_data = string.Empty;
+                // attempt to download JSON data as a string
+                try
+                {
+                    json_data = w.DownloadString(url);
+                }
+                catch (Exception) { }
+                // if string with JSON data is not empty, deserialize it to class and return its instance 
+                return !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<T>(json_data) : new T();
+            }
+        } 
+
+        public static string CreateRequest(string queryString)
+        {
+            string UrlRequest = "https://api.twitch.tv/kraken/games/top?limit=10";
+            return (UrlRequest);
         }
 
         private void btn_connect_Click(object sender, RoutedEventArgs e)
