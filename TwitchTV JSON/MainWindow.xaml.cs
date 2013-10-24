@@ -105,6 +105,9 @@ namespace TwitchTV_JSON
 
         private void GamesList()
         {
+            // The point of this is to get the top10 games right now and 
+            // weed out stuff like "Game name" the amount of viewers, maybe
+            // maybe the poster for each etc. 
             var url = "https://api.twitch.tv/kraken/games/top?limit=10";
             var name = _download_serialized_json_data<Top>(url);
 
