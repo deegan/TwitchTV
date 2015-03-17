@@ -16,11 +16,12 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml.Linq;
 using Newtonsoft.Json;
+using Twitch.Net;
 
 namespace TwitchTV_JSON
 {
     /// <summary>
-    /// Interaktionslogik für MainWindow.xaml
+    /// MainWindow.xaml logic.
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -29,22 +30,25 @@ namespace TwitchTV_JSON
         {
             InitializeComponent();
             GamesList();
-            Refresh(null);
+            //Refresh(null);
         }
 
         public void Refresh(string game)
         {
+            string uri;
             if (game == null)
             {
-                game = "Dota+2"; // this is the default, for now.
+                // this is the default, for now.
+                uri = "https://api.twitch.tv/kraken/games/top";
             }
             else
             {
                 game = game.Replace(" ", "+"); //replace spaces with +.
+                uri = "https://api.twitch.tv/kraken/search/streams?q=" + game;
             }
             streamlist.Clear();
             streamview.Items.Clear();
-            string uri = "http://api.justin.tv/api/stream/list.xml?meta_game="+game;
+            // string uri = "http://api.justin.tv/api/stream/list.xml?meta_game="+game;
             var xmlDocument = XDocument.Load(uri);
             foreach (XElement stream in xmlDocument.Descendants("stream"))
             {
@@ -109,16 +113,23 @@ namespace TwitchTV_JSON
             // weed out stuff like "Game name" the amount of viewers, maybe
             // maybe the poster for each etc. 
             var url = "https://api.twitch.tv/kraken/games/top?limit=10";
-            var name = _download_serialized_json_data<Top>(url);
+            var name = _download_serialized_json_data<Game>(url);
 
+            foreach (var element in name)
+            {
+                CreateGameButtons(name.ToString());
+            }
             // this can probably be fetched from the api. 
             // https://api.twitch.tv/kraken/games/top?limit=10&offset=10
-            CreateGameButtons("World of Warcraft: Mists of Pandaria");
-            CreateGameButtons("Dota 2");
-            CreateGameButtons("Hearthstone: Heroes of Warcraft");
-            CreateGameButtons("StarCraft II: Heart of the Swarm");
-            CreateGameButtons("Heroes of Newerth");
-            CreateGameButtons("League of Legends");
+            // CreateGameButtons("World of Warcraft: Mists of Pandaria");
+            // CreateGameButtons("Dota 2");
+            // CreateGameButtons("Hearthstone: Heroes of Warcraft");
+            // CreateGameButtons("StarCraft II: Heart of the Swarm");
+            // CreateGameButtons("Heroes of Newerth");
+            // CreateGameButtons("League of Legends");
+            // CreateGameButtons("WildStar");
+            // CreateGameButtons("Diablo III: Reaper of Souls");
+            // CreateGameButtons("Path of Exile");
         }
 
         private void btn_refresh_Click(object sender, RoutedEventArgs e)
