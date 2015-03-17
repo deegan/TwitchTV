@@ -8,5 +8,7 @@ Livestreamer: http://docs.livestreamer.io/
 
 MPC-HC: http://mpc-hc.org/
 
+Installation:
+There's no real installation, you download the .7z file and unpack it wherever you see fit.
 
 - hakan@monkii.net
