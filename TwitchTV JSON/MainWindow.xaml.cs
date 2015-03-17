@@ -16,7 +16,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml.Linq;
 using Newtonsoft.Json;
-using Twitch.Net;
 
 namespace TwitchTV_JSON
 {
@@ -30,56 +29,120 @@ namespace TwitchTV_JSON
         {
             InitializeComponent();
             GamesList();
-            //Refresh(null);
+            Refresh(null);
         }
 
         public void Refresh(string game)
         {
             string uri;
+            string res;
+            streamlist.Clear();
+            streamview.Items.Clear();
+
             if (game == null)
             {
                 // this is the default, for now.
                 uri = "https://api.twitch.tv/kraken/games/top";
+                res = MakeHttpRequest(uri);
             }
             else
             {
                 game = game.Replace(" ", "+"); //replace spaces with +.
                 uri = "https://api.twitch.tv/kraken/search/streams?q=" + game;
-            }
-            streamlist.Clear();
-            streamview.Items.Clear();
-            // string uri = "http://api.justin.tv/api/stream/list.xml?meta_game="+game;
-            var xmlDocument = XDocument.Load(uri);
-            foreach (XElement stream in xmlDocument.Descendants("stream"))
-            {
-                try
-                {
-                    TwitchStream temp = new TwitchStream();
-                    if (stream.Element("title").Value != null)
-                        temp.Title = stream.Element("title").Value;
-                    if (stream.Element("channel").Element("login").Value != null)
-                        temp.ChannelOwner = stream.Element("channel").Element("login").Value;
-                    if (stream.Element("channel_count").Value != null)
-                        temp.ViewerCount = Convert.ToInt32(stream.Element("channel_count").Value);
-                    if (stream.Element("channel").Element("screen_cap_url_large").Value != null)
-                        temp.image = stream.Element("channel").Element("screen_cap_url_large").Value;
-                    streamlist.Add(temp);
-                }
-                catch
-                {
 
+                res = MakeHttpRequest(uri);
+                var objects = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
+
+                foreach ( var item in objects.streams)
+                {
+                    try
+                    {
+                        if (item.viewers > 0)
+                        {
+                            string stream_id = item._id.ToString();
+                            var streams = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
+                            TwitchStream temp = new TwitchStream();
+                            foreach (var stream in streams.streams)
+                            {
+                                string tmp_id = stream._id.ToString();
+                                if (stream_id == tmp_id)
+                                {
+                                    if (stream.channel.status != null)
+                                        temp.Title = stream.channel.status;
+                                    if (stream.channel.name != null)
+                                        temp.ChannelOwner = stream.channel.name;
+                                    if (item.viewers != 0)
+                                        temp.ViewerCount = item.viewers;
+                                    if (stream.preview.medium != null)
+                                        temp.image = stream.preview.medium;
+                                    streamlist.Add(temp);
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
                 }
+                List<TwitchStream> SortedStreams = streamlist.OrderByDescending(o => o.ViewerCount).ToList<TwitchStream>();
+                foreach (TwitchStream stream in SortedStreams)
+                {
+                    Button temp = new Button();
+                    temp.Content = stream.ChannelOwner;
+                    temp.ToolTip = stream.Title + Environment.NewLine + stream.ViewerCount.ToString();
+                    temp.Height = 40;
+                    temp.Width = 150;
+                    temp.Click += temp_Click;
+                    streamview.Items.Add(temp);
+                }
+
             }
-            List<TwitchStream> SortedStreams = streamlist.OrderByDescending(o => o.ViewerCount).ToList<TwitchStream>();
-            foreach (TwitchStream stream in SortedStreams)
+            
+        }
+
+        public dynamic MakeHttpRequest(string uri)
+        {
+            HttpWebRequest wRequest = (HttpWebRequest)HttpWebRequest.Create(uri);
+            wRequest.ContentType = "application/json";
+            wRequest.Accept = "application/vnd.twitchtv.v3+json";
+            wRequest.Method = "GET";
+            dynamic wResponse = wRequest.GetResponse().GetResponseStream();
+            StreamReader reader = new StreamReader(wResponse);
+            dynamic res = reader.ReadToEnd();
+            reader.Close();
+            wResponse.Close();
+
+            return res;
+        }
+
+        private void CreateGameButtons(string name, string logo)
+        {
+            ImageBrush brush = new ImageBrush(new BitmapImage(new Uri(logo)));
+            brush.Stretch = Stretch.Uniform;
+            Button game = new Button();
+            game.Content = name;
+            game.Height = 40;
+            game.Width = 172;
+            //game.Background = brush;
+            game.Click += game_select_Change;
+            games.Items.Add(game);            
+        }
+
+        private void GamesList()
+        {
+            // The point of this is to get the top10 games right now and 
+            // weed out stuff like "Game name" the amount of viewers, maybe
+            // maybe the poster for each etc. 
+            var uri = "https://api.twitch.tv/kraken/games/top?limit=10";
+            //var name = _download_serialized_json_data<Game>(url);
+            string res = MakeHttpRequest(uri);
+            var objects = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
+
+            // Create all the buttons.
+            foreach (var item in objects.top)
             {
-                Button temp = new Button();
-                temp.Content = stream.ChannelOwner;
-                temp.ToolTip = stream.Title + Environment.NewLine + stream.ViewerCount.ToString();
-                temp.Height = 40;
-                temp.Width = 150;
-                temp.Click += temp_Click;
-                streamview.Items.Add(temp);
+                CreateGameButtons(item.game.name, item.game.logo.small);
             }
         }
 
@@ -95,41 +158,6 @@ namespace TwitchTV_JSON
             text_title.ToolTip = stream.Title;
             text_viewer.Text = "Viewers: " + stream.ViewerCount.ToString();
             this.DataContext = stream.image;
-        }
-
-        private void CreateGameButtons(string name)
-        {
-            Button game = new Button();
-            game.Content = name;
-            game.Height = 40;
-            game.Width = 172;
-            game.Click += game_select_Change;
-            games.Items.Add(game);            
-        }
-
-        private void GamesList()
-        {
-            // The point of this is to get the top10 games right now and 
-            // weed out stuff like "Game name" the amount of viewers, maybe
-            // maybe the poster for each etc. 
-            var url = "https://api.twitch.tv/kraken/games/top?limit=10";
-            var name = _download_serialized_json_data<Game>(url);
-
-            foreach (var element in name)
-            {
-                CreateGameButtons(name.ToString());
-            }
-            // this can probably be fetched from the api. 
-            // https://api.twitch.tv/kraken/games/top?limit=10&offset=10
-            // CreateGameButtons("World of Warcraft: Mists of Pandaria");
-            // CreateGameButtons("Dota 2");
-            // CreateGameButtons("Hearthstone: Heroes of Warcraft");
-            // CreateGameButtons("StarCraft II: Heart of the Swarm");
-            // CreateGameButtons("Heroes of Newerth");
-            // CreateGameButtons("League of Legends");
-            // CreateGameButtons("WildStar");
-            // CreateGameButtons("Diablo III: Reaper of Souls");
-            // CreateGameButtons("Path of Exile");
         }
 
         private void btn_refresh_Click(object sender, RoutedEventArgs e)
@@ -181,6 +209,7 @@ namespace TwitchTV_JSON
                 if ((bool)button.IsChecked)
                     quality = button.Content.ToString();
             }
+            string cmd = "twitch.tv/" + text_owner.Text.Remove(0, 7) + " " + quality;
             Process.Start("CMD", "/C livestreamer.exe twitch.tv/" + text_owner.Text.Remove(0, 7) + " " + quality);
         }
     }

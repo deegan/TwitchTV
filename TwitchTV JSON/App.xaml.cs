@@ -8,7 +8,7 @@ using System.Windows;
 namespace TwitchTV_JSON
 {
     /// <summary>
-    /// Interaktionslogik für "App.xaml"
+    /// "App.xaml".
     /// </summary>
     public partial class App : Application
     {
