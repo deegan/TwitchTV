@@ -65,10 +65,10 @@ namespace TwitchTV_JSON
         public bool IsChannelOnline(string channel)
         {
             // Check if a channel is online.
-            string uri;
+            string uri2;
             string res2;
-            uri = "https://api.twitch.tv/kraken/streams/"+channel;
-            res2 = MakeHttpRequest(uri);
+            uri2 = "https://api.twitch.tv/kraken/streams/"+channel;
+            res2 = MakeHttpRequest(uri2);
             
             var objects2 = JsonConvert.DeserializeObject<twitch_json.RootObject>(res2);
 
@@ -82,28 +82,28 @@ namespace TwitchTV_JSON
         {
             var objects = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
 
-            if (objects.stream1 != null)
+            if (objects.streams != null)
             {
                 // Just a game
-                foreach (var item in objects.stream)
+                foreach (var item in objects.streams)
                 {
                     try
                     {
                         if (IsChannelOnline(item.channel.name) != null)
                         {
-                            string stream_id = item._id.ToString();
+                            string stream_id = item.channel._id.ToString();
                             var streams = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
                             TwitchStream temp = new TwitchStream();
                             foreach (var stream in streams.streams)
                             {
-                                string tmp_id = stream._id.ToString();
+                                string tmp_id = stream.channel._id.ToString();
                                 if (stream_id == tmp_id)
                                 {
                                     if (stream.channel.status != null)
                                         temp.Title = stream.channel.status;
                                     if (stream.channel.name != null)
                                         temp.ChannelOwner = stream.channel.name;
-                                    if (item.viewers != 0)
+                                    if (stream.viewers != 0)
                                         temp.ViewerCount = item.viewers;
                                     if (stream.preview.medium != null)
                                         temp.image = stream.preview.medium;
@@ -128,9 +128,11 @@ namespace TwitchTV_JSON
                         if (IsChannelOnline(item.channel.name) != false)
                         {
                             string stream_id = item.channel._id.ToString();
-                            var streams = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
+                            string uri3 = "https://api.twitch.tv/kraken/search/streams?q=" + item.channel.name;
+                            res = MakeHttpRequest(uri3);
+                            var channel = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
                             TwitchStream temp = new TwitchStream();
-                            foreach (var stream in streams.follows)
+                            foreach (var stream in channel.streams)
                             {
                                 string tmp_id = stream.channel._id.ToString();
                                 if (stream_id == tmp_id)
@@ -139,10 +141,10 @@ namespace TwitchTV_JSON
                                         temp.Title = stream.channel.status;
                                     if (stream.channel.name != null)
                                         temp.ChannelOwner = stream.channel.name;
-                                    if (item.channel.views != 0)
-                                        temp.ViewerCount = item.channel.views;
-                                    if (stream.channel.preview.medium != null)
-                                        temp.image = stream.channel.preview.medium;
+                                    if (stream.viewers != 0)
+                                        temp.ViewerCount = stream.viewers;
+                                    if (stream.preview.medium != null)
+                                        temp.image = stream.preview.medium;
                                     streamlist.Add(temp);
                                 }
                             }

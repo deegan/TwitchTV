@@ -32,47 +32,20 @@ namespace TwitchTV_JSON
             public string videos { get; set; }
         }
 
-        // public class Links2
-        // {
-        //     public string self { get; set; }
-        //     public string follows { get; set; }
-        //     public string commercial { get; set; }
-        //     public string stream_key { get; set; }
-        //     public string chat { get; set; }
-        //     public string features { get; set; }
-        //     public string subscriptions { get; set; }
-        //     public string editors { get; set; }
-        //     public string teams { get; set; }
-        //     public string videos { get; set; }
-        // }
-        // 
-        // public class Links3
-        // {
-        //     public string self { get; set; }
-        //     public string follows { get; set; }
-        //     public string commercial { get; set; }
-        //     public string stream_key { get; set; }
-        //     public string chat { get; set; }
-        //     public string features { get; set; }
-        //     public string subscriptions { get; set; }
-        //     public string editors { get; set; }
-        //     public string teams { get; set; }
-        //     public string videos { get; set; }
-        // }
-        
-        // public class Box
-        // {
-        //     public string template { get; set; }
-        //     public string small { get; set; }
-        //     public string medium { get; set; }
-        //     public string large { get; set; }
-        // }
-
         public class Links2
         {
             public string self { get; set; }
+            public string follows { get; set; }
+            public string commercial { get; set; }
+            public string stream_key { get; set; }
+            public string chat { get; set; }
+            public string features { get; set; }
+            public string subscriptions { get; set; }
+            public string editors { get; set; }
+            public string teams { get; set; }
+            public string videos { get; set; }
         }
-
+        
         public class Links3
         {
             public string self { get; set; }
@@ -83,9 +56,36 @@ namespace TwitchTV_JSON
             public string features { get; set; }
             public string subscriptions { get; set; }
             public string editors { get; set; }
-            public string videos { get; set; }
             public string teams { get; set; }
+            public string videos { get; set; }
         }
+        
+        // public class Box
+        // {
+        //     public string template { get; set; }
+        //     public string small { get; set; }
+        //     public string medium { get; set; }
+        //     public string large { get; set; }
+        // }
+
+        //public class Links2
+        //{
+        //    public string self { get; set; }
+        //}
+        //
+        //public class Links3
+        //{
+        //    public string self { get; set; }
+        //    public string follows { get; set; }
+        //    public string commercial { get; set; }
+        //    public string stream_key { get; set; }
+        //    public string chat { get; set; }
+        //    public string features { get; set; }
+        //    public string subscriptions { get; set; }
+        //    public string editors { get; set; }
+        //    public string videos { get; set; }
+        //    public string teams { get; set; }
+        //}
 
         public class Preview
         {
@@ -126,7 +126,9 @@ namespace TwitchTV_JSON
             public string url { get; set; }
             public int views { get; set; }
             public int followers { get; set; }
-            public Links2 _links { get; set; }
+            public Links _links { get; set; }
+            public Links2 _links2 { get; set; }
+            public Links3 _links3 { get; set; }
         }
 
         public class Stream
@@ -138,7 +140,9 @@ namespace TwitchTV_JSON
             public double average_fps { get; set; }
             public string created_at { get; set; }
             public Preview preview { get; set; }
-            public Links3 _links { get; set; }
+            public Links _links { get; set; }
+            public Links2 _links2 { get; set; }
+            public Links3 _links3 { get; set; }
             public Channel channel { get; set; }
         }
 
@@ -164,6 +168,10 @@ namespace TwitchTV_JSON
             public Logo logo { get; set; }
             public Links _links { get; set; }
             public int viewers { get; set; }
+            public Links2 _links2 { get; set; }
+            public Links3 _links3 { get; set; }
+            public Channel channel { get; set; }
+
         }
 
         public class Top
@@ -189,6 +197,7 @@ namespace TwitchTV_JSON
             public List<Channel> channels { get; set; }
             public List<Game> games { get; set; }
             public Stream stream { get; set; }
+            public List<Stream> streams { get; set; }
             public List<Follow> follows { get; set; }
             //public List<StreamSearch> streamsearchs { get; set; }
         }
