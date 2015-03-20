@@ -29,7 +29,7 @@ namespace TwitchTV_JSON
         {
             InitializeComponent();
             GamesList();
-            Refresh(null);
+            // Refresh(null);
         }
 
         public void Refresh(string game)
@@ -39,39 +39,71 @@ namespace TwitchTV_JSON
             streamlist.Clear();
             streamview.Items.Clear();
 
-            if (game == null)
+            StreamReader streamReader = new StreamReader("C:\\Projects\\TwitchTV-master\\TwitchTV\\TwitchTV JSON\\settings.txt");
+            string user = streamReader.ReadToEnd();
+            streamReader.Close();
+
+
+            if (game == user)
             {
-                // this is the default, for now.
-                uri = "https://api.twitch.tv/kraken/games/top";
+                // Updating the list with the channels the user follows.
+                uri = "https://api.twitch.tv/kraken/users/deegantv/follows/channels";
                 res = MakeHttpRequest(uri);
+                CreateChannelList(res);
             }
             else
             {
+                // Updating the list with whatever game the users choose.
                 game = game.Replace(" ", "+"); //replace spaces with +.
                 uri = "https://api.twitch.tv/kraken/search/streams?q=" + game;
-
                 res = MakeHttpRequest(uri);
-                var objects = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
+                CreateChannelList(res);
+            }
+            
+        }
 
-                foreach ( var item in objects.streams)
+        public bool IsChannelOnline(string channel)
+        {
+            // Check if a channel is online.
+            string uri2;
+            string res2;
+            uri2 = "https://api.twitch.tv/kraken/streams/"+channel;
+            res2 = MakeHttpRequest(uri2);
+            
+            var objects2 = JsonConvert.DeserializeObject<twitch_json.RootObject>(res2);
+
+            if (objects2.stream == null)
+                return false;
+            else
+                return true;
+        }
+
+        public void CreateChannelList(dynamic res)
+        {
+            var objects = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
+
+            if (objects.streams != null)
+            {
+                // Just a game
+                foreach (var item in objects.streams)
                 {
                     try
                     {
-                        if (item.viewers > 0)
+                        if (IsChannelOnline(item.channel.name) != null)
                         {
-                            string stream_id = item._id.ToString();
+                            string stream_id = item.channel._id.ToString();
                             var streams = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
                             TwitchStream temp = new TwitchStream();
                             foreach (var stream in streams.streams)
                             {
-                                string tmp_id = stream._id.ToString();
+                                string tmp_id = stream.channel._id.ToString();
                                 if (stream_id == tmp_id)
                                 {
                                     if (stream.channel.status != null)
                                         temp.Title = stream.channel.status;
                                     if (stream.channel.name != null)
                                         temp.ChannelOwner = stream.channel.name;
-                                    if (item.viewers != 0)
+                                    if (stream.viewers != 0)
                                         temp.ViewerCount = item.viewers;
                                     if (stream.preview.medium != null)
                                         temp.image = stream.preview.medium;
@@ -85,20 +117,56 @@ namespace TwitchTV_JSON
 
                     }
                 }
-                List<TwitchStream> SortedStreams = streamlist.OrderByDescending(o => o.ViewerCount).ToList<TwitchStream>();
-                foreach (TwitchStream stream in SortedStreams)
-                {
-                    Button temp = new Button();
-                    temp.Content = stream.ChannelOwner;
-                    temp.ToolTip = stream.Title + Environment.NewLine + stream.ViewerCount.ToString();
-                    temp.Height = 40;
-                    temp.Width = 150;
-                    temp.Click += temp_Click;
-                    streamview.Items.Add(temp);
-                }
-
             }
-            
+            else
+            {
+                // Following
+                foreach (var item in objects.follows)
+                {
+                    try
+                    {
+                        if (IsChannelOnline(item.channel.name) != false)
+                        {
+                            string stream_id = item.channel._id.ToString();
+                            string uri3 = "https://api.twitch.tv/kraken/search/streams?q=" + item.channel.name;
+                            res = MakeHttpRequest(uri3);
+                            var channel = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
+                            TwitchStream temp = new TwitchStream();
+                            foreach (var stream in channel.streams)
+                            {
+                                string tmp_id = stream.channel._id.ToString();
+                                if (stream_id == tmp_id)
+                                {
+                                    if (stream.channel.status != null)
+                                        temp.Title = stream.channel.status;
+                                    if (stream.channel.name != null)
+                                        temp.ChannelOwner = stream.channel.name;
+                                    if (stream.viewers != 0)
+                                        temp.ViewerCount = stream.viewers;
+                                    if (stream.preview.medium != null)
+                                        temp.image = stream.preview.medium;
+                                    streamlist.Add(temp);
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            List<TwitchStream> SortedStreams = streamlist.OrderByDescending(o => o.ViewerCount).ToList<TwitchStream>();
+            foreach (TwitchStream stream in SortedStreams)
+            {
+                Button temp = new Button();
+                temp.Content = stream.ChannelOwner;
+                temp.ToolTip = stream.Title + Environment.NewLine + stream.ViewerCount.ToString();
+                temp.Height = 40;
+                temp.Width = 150;
+                temp.Click += temp_Click;
+                streamview.Items.Add(temp);
+            }
         }
 
         public dynamic MakeHttpRequest(string uri)
@@ -135,10 +203,11 @@ namespace TwitchTV_JSON
             // weed out stuff like "Game name" the amount of viewers, maybe
             // maybe the poster for each etc. 
             var uri = "https://api.twitch.tv/kraken/games/top?limit=10";
-            //var name = _download_serialized_json_data<Game>(url);
             string res = MakeHttpRequest(uri);
             var objects = JsonConvert.DeserializeObject<twitch_json.RootObject>(res);
 
+            // Clear the list first.
+            games.Items.Clear();
             // Create all the buttons.
             foreach (var item in objects.top)
             {
@@ -162,7 +231,34 @@ namespace TwitchTV_JSON
 
         private void btn_refresh_Click(object sender, RoutedEventArgs e)
         {
-            Refresh(null);
+            if (sender == btn_refresh2)
+            {
+                GamesList();
+            }
+            else
+            {
+                // streamlist.Clear();
+                streamview.Items.Clear();
+                string game = Convert.ToString(e.Source.GetType().GetProperty("Content").GetValue(e.Source, null));
+                Refresh(game);
+            }
+        }
+
+        private void btn_follwing_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader streamReader = new StreamReader("C:\\Projects\\TwitchTV-master\\TwitchTV\\TwitchTV JSON\\settings.txt");
+            string text = streamReader.ReadToEnd();
+            streamReader.Close();
+
+            if (text != null)
+            {
+                Refresh(text);
+            }
+            else
+            {
+                string game = Convert.ToString(e.Source.GetType().GetProperty("Content").GetValue(e.Source, null));
+                Refresh(game);
+            }
         }
 
         private void game_select_Change(object sender, RoutedEventArgs e)
@@ -171,29 +267,6 @@ namespace TwitchTV_JSON
             string game = Convert.ToString(e.Source.GetType().GetProperty("Content").GetValue(e.Source, null));
             Refresh(game);
         }
-        public class TwitchStream
-        {
-            public string Title { get; set; }
-            public string ChannelOwner { get; set; }
-            public int ViewerCount { get; set; }
-            public string image { get; set; }
-        }
-
-        private static T _download_serialized_json_data<T>(string url) where T : new()
-        {
-            using (var w = new WebClient())
-            {
-                var json_data = string.Empty;
-                // attempt to download JSON data as a string
-                try
-                {
-                    json_data = w.DownloadString(url);
-                }
-                catch (Exception) { }
-                // if string with JSON data is not empty, deserialize it to class and return its instance 
-                return !string.IsNullOrEmpty(json_data) ? JsonConvert.DeserializeObject<T>(json_data) : new T();
-            }
-        } 
 
         public static string CreateRequest(string queryString)
         {
@@ -203,7 +276,7 @@ namespace TwitchTV_JSON
 
         private void btn_connect_Click(object sender, RoutedEventArgs e)
         {
-            string quality = "mobile_high";
+            string quality = "source";
             foreach (RadioButton button in Quality.Children)
             {
                 if ((bool)button.IsChecked)
