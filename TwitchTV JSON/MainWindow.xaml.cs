@@ -39,7 +39,11 @@ namespace TwitchTV_JSON
             streamlist.Clear();
             streamview.Items.Clear();
 
-            StreamReader streamReader = new StreamReader("C:\\Projects\\TwitchTV-master\\TwitchTV\\TwitchTV JSON\\settings.txt");
+            // Get the username on twitch from this file.
+            // used to get the channels from the follow.
+            string currentDir = Environment.CurrentDirectory;
+            string userFile = currentDir + "\\settings.txt";
+            StreamReader streamReader = new StreamReader(userFile);
             string user = streamReader.ReadToEnd();
             streamReader.Close();
 
