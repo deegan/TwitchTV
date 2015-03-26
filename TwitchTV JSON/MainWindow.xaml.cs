@@ -250,13 +250,20 @@ namespace TwitchTV_JSON
 
         private void btn_follwing_Click(object sender, RoutedEventArgs e)
         {
-            StreamReader streamReader = new StreamReader("C:\\Projects\\TwitchTV-master\\TwitchTV\\TwitchTV JSON\\settings.txt");
-            string text = streamReader.ReadToEnd();
+            // Get the username on twitch from this file.
+            // used to get the channels from the follow.
+            // StreamReader streamReader = new StreamReader("C:\\Projects\\TwitchTV-master\\TwitchTV\\TwitchTV JSON\\settings.txt");
+            // string text = streamReader.ReadToEnd();
+            // streamReader.Close();
+            string currentDir = Environment.CurrentDirectory;
+            string userFile = currentDir + "\\settings.txt";
+            StreamReader streamReader = new StreamReader(userFile);
+            string user = streamReader.ReadToEnd();
             streamReader.Close();
 
-            if (text != null)
+            if (user != null)
             {
-                Refresh(text);
+                Refresh(user);
             }
             else
             {
